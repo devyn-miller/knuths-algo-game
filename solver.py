@@ -63,6 +63,9 @@ def play_manual_game(pegs, slots, secret_code):
         for guess, red, white in history:  # Display history
             print(f"Guess: {guess} - Red pegs: {red}, White pegs: {white}")
         
+        print(f"Number of moves taken: {moves_taken}")
+        print(f"Number of moves remaining: {user_attempts - moves_taken}")
+        
         if can_still_win(moves_taken, user_attempts):
             print("You can still guarantee a win with optimal play.")
         else:
@@ -70,6 +73,7 @@ def play_manual_game(pegs, slots, secret_code):
         
         if has_won(secret_code, user_guess):
             print("Congratulations, you've cracked the code!")
-            break
-    else:
-        print("Game over. Better luck next time!")
+            return "Won"
+        else:
+            print("Game over. Better luck next time!")
+            return "Lost"
