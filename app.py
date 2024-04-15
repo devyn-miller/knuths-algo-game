@@ -1,7 +1,7 @@
 import streamlit as st
 from solver import solve_game
 from manual_play import play_manual_game
-from utils import generate_random_code
+from solver import generate_random_code
 
 def main():
     st.title("Mastermind Solver")

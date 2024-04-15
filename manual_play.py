@@ -1,4 +1,4 @@
-from utils import has_won, calculate_max_unlucky_moves, can_still_win
+from solver import has_won, calculate_max_unlucky_moves, can_still_win
 
 def play_manual_game(pegs, slots, secret_code):
     max_unlucky_moves = calculate_max_unlucky_moves(pegs, slots)

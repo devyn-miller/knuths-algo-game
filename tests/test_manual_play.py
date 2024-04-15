@@ -1,6 +1,6 @@
 import pytest
 from manual_play import play_manual_game
-from utils import has_won, can_still_win
+from solver import has_won, can_still_win
 
 # Mocking user inputs and secret code for testing
 @pytest.fixture
