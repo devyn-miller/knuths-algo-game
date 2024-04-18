@@ -32,33 +32,40 @@ def calculate_feedback(code, guess):
     white_pegs = sum(min(code.count(j), guess.count(j)) for j in set(guess)) - black_pegs
     return black_pegs, white_pegs
 
-def solve_game(pegs, slots, secret_code, feedback_func):
+def solve_game(pegs, slots, secret_code, feedback_func_auto):
     """
     Solve the game using provided feedback function instead of input().
-    feedback_func is a function that takes the current guess and returns black_pegs, white_pegs.
+    feedback_func_auto is a function that takes the current guess, secret code and returns black_pegs, white_pegs.
     """
     colors = pegs
     possible_codes = generate_possible_codes(slots, colors)
     attempts = 0
+    game_progress = []  # Store each guess and feedback
     while len(possible_codes) > 1:
         attempts += 1
         guess = possible_codes[0]
-        black_pegs, white_pegs = feedback_func(guess)
+        black_pegs, white_pegs = feedback_func_auto(guess, secret_code)
+        game_progress.append((guess, black_pegs, white_pegs))  # Record progress
         feedback = (black_pegs, white_pegs)
         possible_codes = [code for code in possible_codes if calculate_feedback(code, guess) == feedback]
-    return possible_codes[0], attempts
+    return possible_codes[0], attempts, game_progress
 
-# Note: play_manual_game function will be adapted in a similar way if needed.
-
-
-def feedback_func(guess):
+def feedback_func_auto(guess, secret_code):
     """
-    Collect feedback for a given guess using Streamlit sliders.
+    Automatically calculate feedback for a given guess based on the secret code.
     """
-    st.write(f"Guess: {guess}")
-    black_pegs = st.slider("Black pegs (correct color, correct position):", 0, len(guess), 0, key=f"black_{guess}")
-    white_pegs = st.slider("White pegs (correct color, wrong position):", 0, len(guess) - black_pegs, 0, key=f"white_{guess}")
+    guess_colors = int_to_color_name(guess)
+    black_pegs = sum(c == g for c, g in zip(secret_code, guess_colors))
+    white_pegs = sum(min(secret_code.count(j), guess_colors.count(j)) for j in set(guess_colors)) - black_pegs
     return black_pegs, white_pegs
+
+def int_to_color_name(integers):
+    color_map = {
+        1: 'Red', 2: 'Green', 3: 'Blue', 4: 'Yellow', 5: 'Black',
+        6: 'White', 7: 'Orange', 8: 'Purple', 9: 'Pink', 10: 'Brown',
+        11: 'Cyan', 12: 'Magenta', 13: 'Lime', 14: 'Gray', 15: 'Navy',
+    }
+    return [color_map[i] for i in integers]
 
 def pin_color_to_rgb(pin):
     color_map = {
@@ -110,13 +117,24 @@ def main():
         for i in range(slots):
             color = st.selectbox(f"Select color for pin {i+1}:", options=['Red', 'Green', 'Blue', 'Yellow', 'Black', 'White', 'Orange', 'Purple', 'Pink', 'Brown', 'Cyan', 'Magenta', 'Lime', 'Gray', 'Navy'], index=0, key=f"pin_{i}")
             secret_code.append(color)
-        secret_code = ''.join(secret_code)
+
+    view_mode = st.radio("View mode:", ("Step-by-Step", "All at Once"))
 
     if st.button("Start Game"):
         if game_mode == "Autonomous Solver":
-            solution, attempts = solve_game(pegs, slots, secret_code, feedback_func)
-            st.write(f"Solution found in {attempts} attempts: {solution}")
-            visualize_game(secret_code, [solution])
+            solution, attempts, game_progress = solve_game(pegs, slots, secret_code, feedback_func_auto)
+            if view_mode == "All at Once":
+                for guess, black_pegs, white_pegs in game_progress:
+                    st.write(f"Guess: {guess}, Black Pegs: {black_pegs}, White Pegs: {white_pegs}")
+                visualize_game(secret_code, [solution])
+            else:  # Step-by-Step
+                for guess, black_pegs, white_pegs in game_progress:
+                    if st.button(f"Next (Guess: {guess})"):
+                        st.write(f"Black Pegs: {black_pegs}, White Pegs: {white_pegs}")
+                        visualize_game(secret_code, [guess])
+                    else:
+                        break
+                visualize_game(secret_code, [solution])
         else:
             st.write("Manual play mode is not yet implemented for Streamlit.")
 
